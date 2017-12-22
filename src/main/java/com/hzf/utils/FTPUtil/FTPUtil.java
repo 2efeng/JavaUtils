@@ -236,7 +236,7 @@ public class FTPUtil {
         if (isDir) return TYPE_DIR;
         boolean isFile = exitFile(path);
         if (isFile) return TYPE_FILE;
-        else throw new Exception(path + " does not exit.");
+        else return NOT_EXIT;
     }
 
 

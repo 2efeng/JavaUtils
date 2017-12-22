@@ -14,7 +14,7 @@ public class ConfigUtil {
     private static Properties props;
 
     static {
-//        loadConfigByResource();
+        loadConfigByResource();
         loadConfigByPath();
         loadLog4jByPath();
     }

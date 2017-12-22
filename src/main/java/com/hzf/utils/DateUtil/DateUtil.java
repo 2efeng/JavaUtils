@@ -9,7 +9,7 @@ public class DateUtil {
     /**
      * 时区 年-月-日 时:分:秒 显示格式
      */
-    public static String DATE_TO_STRING_DETAILS_PATTERN = "Z yyyy-MM-dd HH:MM:ss";
+    private static String DATE_TO_STRING_DETAILS_PATTERN = "Z yyyy-MM-dd HH:MM:ss";
 
 
     /**
