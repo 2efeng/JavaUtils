@@ -20,7 +20,6 @@ public class Base64Util {
     }
 
     public static boolean decodeBase64ToFile(String base64, String localPath) throws Exception {
-        byte[] contentByte = decodeBase64ToByte(base64);
         FileOutputStream out = new FileOutputStream(localPath);
         return decodeBase64ToFile(base64, out);
     }

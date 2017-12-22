@@ -16,12 +16,21 @@ import static org.apache.commons.net.ftp.FTPReply.UNRECOGNIZED_COMMAND;
 
 public class FTPUtil {
 
+    /**
+     * 文件
+     */
+    private static final int TYPE_FILE = 666;
+    /**
+     * 文件夹
+     */
+    private static final int TYPE_DIR = 233;
+    /**
+     * 路径不存在
+     */
+    private static final int NOT_EXIT = -10086;
+
     private static volatile FTPClient ftpClient;
     private static volatile FTPUtil FTPUtil;
-
-    private static final int TYPE_FILE = 666;
-    private static final int TYPE_DIR = 233;
-    private static final int NOT_EXIT = -10086;
 
     private FTPUtil() {
     }
@@ -86,16 +95,6 @@ public class FTPUtil {
     }
 
     /**
-     * FTP.BINARY_FILE_TYPE 二进制文件
-     * FTP.ASCII_FILE_TYPE 文本文件
-     *
-     * @param fileType 文件类型
-     */
-    private static void setFileType(int fileType) throws Exception {
-        ftpClient.setFileType(fileType);
-    }
-
-    /**
      * 关闭连接
      */
     private static void closeFTP() throws Exception {
@@ -103,6 +102,16 @@ public class FTPUtil {
             ftpClient.logout();//退出FTP服务器
             ftpClient.disconnect();//关闭FTP连接
         }
+    }
+
+    /**
+     * FTP.BINARY_FILE_TYPE 二进制文件
+     * FTP.ASCII_FILE_TYPE 文本文件
+     *
+     * @param fileType 文件类型
+     */
+    private static void setFileType(int fileType) throws Exception {
+        ftpClient.setFileType(fileType);
     }
 
     /**
@@ -127,7 +136,7 @@ public class FTPUtil {
      * @param path 目录
      */
     private boolean createDirectory(String path) throws Exception {
-        if (path == null || path.equals("")) throw new Exception("path is null");
+        if (path == null || path.equals("")) throw new Exception("path value is null");
         boolean flag = false;
         String[] dirs = path.split("/");
         StringBuilder rollBackDir = new StringBuilder();
@@ -152,57 +161,31 @@ public class FTPUtil {
         return flag;
     }
 
-    /**
-     * 在FTP服务器上删除目录
-     * 如果目录下有文件，则删除失败
-     *
-     * @param path 目录
-     */
-    public boolean removeDirectory(String path) throws Exception {
-        return ftpClient.removeDirectory(path);
-    }
 
     /**
-     * 删除FTP服务器上的文件
-     *
-     * @param fileName FTP服务器文件名称
+     * 删除文件/文件夹
      */
-    private boolean removeFile(String fileName) throws Exception {
-        return ftpClient.deleteFile(fileName);
-    }
-
-    /**
-     * 删除所有文件
-     *
-     * @param dir 目录
-     */
-    public boolean deleteDir(String dir) throws Exception {
-        dir = normFileName(dir);
-        FTPFile[] ftpFileArr = ftpClient.listFiles(dir);
-        if (ftpFileArr == null || ftpFileArr.length == 0) {
-            return removeDirectory(dir);
+    public boolean deleteFile(String path) throws Exception {
+        int type = checkDir(path);
+        switch (type) {
+            case TYPE_DIR:
+                return deleteDir(path);
+            case TYPE_FILE:
+                return removeFile(path);
+            case NOT_EXIT:
+            default:
+                throw new Exception("Del defeat! There are also files under the directory.");
         }
-        for (FTPFile ftpFile : ftpFileArr) {
-            String name = dir + "/" + ftpFile.getName();
-            if (ftpFile.isDirectory()) {
-                removeDirectory(name);
-            } else if (ftpFile.isFile()) {
-                removeFile(name);
-            }
-        }
-        return removeDirectory(dir);
     }
 
 
     /**
      * 判断文件是否存在
-     *
-     * @param fileName 文件名
      */
     private boolean exitFile(String fileName) throws Exception {
         InputStream in = ftpClient.retrieveFileStream(fileName);
         if (in == null || ftpClient.getReplyCode() == UNRECOGNIZED_COMMAND)
-            throw new Exception(fileName + " does not exit.");
+            return false;
         in.close();
         // 必须执行，否则在循环检查多个文件时会出错
         ftpClient.completePendingCommand();
@@ -211,8 +194,6 @@ public class FTPUtil {
 
     /**
      * 判断目录是否存在
-     *
-     * @param path 目录
      */
     private boolean exitDir(String path) throws Exception {
         boolean flag = changeDirectory(path);
@@ -227,8 +208,7 @@ public class FTPUtil {
      * 判断是文件还是文件夹
      * TYPE_DIR  233 ：文件夹
      * TYPE_FILE 666 ：文件
-     *
-     * @param path 目录
+     * NOT_EXIT      ：路径不存在
      */
     public int checkDir(String path) throws Exception {
         path = normFileName(path);
@@ -313,9 +293,10 @@ public class FTPUtil {
      */
     InputStream getFTPFileStream(String FTPFileName) throws Exception {
         InputStream in = null;
-        //TODO 判断FTP文件是否存在
+        FTPFileName = normFileName(FTPFileName);
+        if (!exitFile(FTPFileName)) throw new Exception(FTPFileName + " does not exit.");
         try {
-            in = ftpClient.retrieveFileStream(normFileName(FTPFileName));
+            in = ftpClient.retrieveFileStream(FTPFileName);
             return in;
         } finally {
             if (in != null) in.close();
@@ -330,7 +311,8 @@ public class FTPUtil {
      */
     boolean downloadFTPFile2local(String FTPFileName, String localFileName) throws Exception {
         FileOutputStream out = null;
-        //TODO 判断FTP文件是否存在
+        FTPFileName = normFileName(FTPFileName);
+        if (!exitFile(FTPFileName)) throw new Exception(FTPFileName + " does not exit.");
         boolean flag;
         try {
             out = new FileOutputStream(localFileName);
@@ -340,6 +322,42 @@ public class FTPUtil {
         }
         return flag;
     }
+
+    //在FTP服务器上删除目录
+    //如果目录下有文件或者文件夹，则删除失败
+    private boolean removeDirectory(String path) throws Exception {
+        path = normFileName(path);
+        FTPFile[] ftpFileArr = ftpClient.listFiles(path);
+        if (ftpFileArr == null || ftpFileArr.length == 0) {
+            return removeDirectory(path);
+        } else {
+            throw new Exception("Delete directory defeat! There are also files under the directory.");
+        }
+    }
+
+    //删除FTP服务器上的文件
+    private boolean removeFile(String fileName) throws Exception {
+        return ftpClient.deleteFile(fileName);
+    }
+
+    //删除所有文件
+    private boolean deleteDir(String dir) throws Exception {
+        dir = normFileName(dir);
+        FTPFile[] ftpFileArr = ftpClient.listFiles(dir);
+        if (ftpFileArr == null || ftpFileArr.length == 0) {
+            return removeDirectory(dir);
+        }
+        for (FTPFile ftpFile : ftpFileArr) {
+            String name = dir + "/" + ftpFile.getName();
+            if (ftpFile.isDirectory()) {
+                removeDirectory(name);
+            } else if (ftpFile.isFile()) {
+                removeFile(name);
+            }
+        }
+        return removeDirectory(dir);
+    }
+
 
     //规范文件名
     private String normFileName(String file) throws Exception {
