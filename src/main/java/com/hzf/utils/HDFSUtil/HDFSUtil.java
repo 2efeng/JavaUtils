@@ -143,6 +143,14 @@ class HDFSUtil {
         }
     }
 
+
+    /**
+     * 判断文件、目录是否存在
+     */
+    boolean isExit(String path) {
+        return false;
+    }
+
     /**
      * 规范文件名
      */
@@ -152,16 +160,6 @@ class HDFSUtil {
             file = "/" + file;
         }
         return file;
-    }
-
-    public static void main(String[] args) {
-        try {
-            getInstance().uploadFile2hdfs("PDF", "CSS.pdf", new FileInputStream("D:\\files\\HTML5CSS3JavaScript.pdf"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
     }
 
 
