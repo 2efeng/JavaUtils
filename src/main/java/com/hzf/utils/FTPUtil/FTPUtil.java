@@ -9,88 +9,72 @@ import java.util.List;
 
 
 public class FTPUtil {
-
     /**
      * 文件
      */
-    private static final int TYPE_FILE = 666;
+    public static final int TYPE_FILE = 666;
     /**
      * 文件夹
      */
-    private static final int TYPE_DIR = 233;
+    public static final int TYPE_DIR = 233;
     /**
      * 路径不存在
      */
-    private static final int NOT_EXIT = -10086;
-
-    private static volatile FTPClient ftpClient;
-    private static volatile FTPUtil FTPUtil;
-
-    private FTPUtil() {
-    }
-
-    private static synchronized void syncInit() throws Exception {
-        if (FTPUtil == null) {
-            FTPUtil = new FTPUtil();
-            connectFTP();
-        }
-    }
-
-    public static FTPUtil getInstance() throws Exception {
-        if (FTPUtil == null) {
-            syncInit();
-        }
-        return FTPUtil;
-    }
-
-    private static void connectFTP() throws Exception {
-        String host = ConfigUtil.getProperty("FtpServer");
-        int port = Integer.valueOf(ConfigUtil.getProperty("FtpPort"));
-        String name = ConfigUtil.getProperty("FtpName");
-        String pwd = ConfigUtil.getProperty("FtpPwd");
-        connectServer(host, port, name, pwd);
-    }
+    public static final int NOT_EXIT = 9487;
+    /**
+     * FTP.BINARY_FILE_TYPE 二进制文件
+     */
+    public static final int BINARY = FTP.BINARY_FILE_TYPE;
+    /**
+     * FTP.ASCII_FILE_TYPE 文本文件
+     */
+    public static final int ASCII = FTP.ASCII_FILE_TYPE;
 
 
     /**
-     * 使用详细信息进行服务器连接
+     * 连接ftp
      *
      * @param server   服务器地址名称
      * @param port     端口号
      * @param user     用户名
      * @param password 用户密码
+     * @param fileType 文件类型
+     * @return FTPClient
      */
-    private static void connectServer(String server, int port, String user, String password)
+    public static FTPClient getFtpClient(String server, int port, String user, String password, int fileType)
             throws Exception {
-        if (ftpClient == null) ftpClient = new FTPClient();
-        if (ftpClient.isConnected()) return;
+        FTPClient ftpClient = new FTPClient();
         ftpClient.connect(server, port);
         //连接成功后的回应码
         int reply = ftpClient.getReplyCode();
-        try {
-            if (FTPReply.isPositiveCompletion(reply)) {
-                if (ftpClient.login(user, password)) {
-                    ftpClient.setBufferSize(1024);//设置上传缓存大小
-                    ftpClient.setControlEncoding("GBK");//设置编码
-                    setFileType(FTPClient.BINARY_FILE_TYPE);
-                } else {
-                    ftpClient.disconnect();
-                    throw new Exception("FTP server refused login.");
-                }
+        if (FTPReply.isPositiveCompletion(reply)) {
+            if (ftpClient.login(user, password)) {
+                ftpClient.setBufferSize(1024);//设置上传缓存大小
+                ftpClient.setControlEncoding("GBK");//设置编码
+                ftpClient.setFileType(fileType);
             } else {
                 ftpClient.disconnect();
-                throw new Exception("FTP server refused connection.");
+                throw new Exception("FTP server refused login.");
             }
-        } catch (Exception e) {
-            if (ftpClient.isConnected()) ftpClient.disconnect();
-            throw e;
+        } else {
+            ftpClient.disconnect();
+            throw new Exception("FTP server refused connection.");
         }
+        return ftpClient;
+    }
+
+    /**
+     * 连接ftp
+     */
+    public static FTPClient getFtpClient(String server, int port, String user, String password)
+            throws Exception {
+        return getFtpClient(server, port, user, password, BINARY);
     }
 
     /**
      * 关闭连接
      */
-    public static void disconnectFTP() throws Exception {
+    public static void disconnectFTP(FTPClient ftpClient) throws Exception {
         if (ftpClient != null && ftpClient.isConnected()) {
             ftpClient.logout();//退出FTP服务器
             ftpClient.disconnect();//关闭FTP连接
@@ -98,19 +82,9 @@ public class FTPUtil {
     }
 
     /**
-     * FTP.BINARY_FILE_TYPE 二进制文件
-     * FTP.ASCII_FILE_TYPE 文本文件
-     *
-     * @param fileType 文件类型
-     */
-    private static void setFileType(int fileType) throws Exception {
-        ftpClient.setFileType(fileType);
-    }
-
-    /**
      * FTP服务器工作目录
      */
-    private String getWorkingDirectory() throws Exception {
+    public static String getWorkingDirectory(FTPClient ftpClient) throws Exception {
         return ftpClient.printWorkingDirectory();
     }
 
@@ -119,7 +93,7 @@ public class FTPUtil {
      *
      * @param dir FTP服务器工作目录
      */
-    private boolean changeDirectory(String dir) throws Exception {
+    private static boolean changeDirectory(FTPClient ftpClient, String dir) throws Exception {
         return ftpClient.changeWorkingDirectory(dir);
     }
 
@@ -128,7 +102,7 @@ public class FTPUtil {
      *
      * @param path 目录
      */
-    public boolean createDirectory(String path) throws Exception {
+    public static boolean createDirectory(FTPClient ftpClient, String path) throws Exception {
         if (path == null || path.equals("")) throw new Exception("path value is null");
         boolean flag = false;
         String[] dirs = path.split("/");
@@ -137,14 +111,15 @@ public class FTPUtil {
         String dir;
         boolean isExit;
         for (String dirStr : dirs) {
+            if (dirStr.equals("")) continue;
             createDir.append(dirStr);
             createDir.append("/");
             dir = normFileName(createDir.toString());
-            isExit = exitDir(dir);
+            isExit = exitDir(ftpClient, dir);
             if (!isExit) {
                 flag = ftpClient.makeDirectory(dir);
                 if (!flag && !rollBackDir.toString().equals("")) {
-                    deleteDir(normFileName(rollBackDir.toString()));
+                    deleteDir(ftpClient, normFileName(rollBackDir.toString()));
                     flag = false;
                     break;
                 }
@@ -154,17 +129,16 @@ public class FTPUtil {
         return flag;
     }
 
-
     /**
      * 删除文件/文件夹
      */
-    public boolean removePath(String path) throws Exception {
-        int type = checkDir(path);
+    public static boolean removePath(FTPClient ftpClient, String path) throws Exception {
+        int type = checkDir(ftpClient, path);
         switch (type) {
             case TYPE_DIR:
-                return deleteDir(path);
+                return deleteDir(ftpClient, path);
             case TYPE_FILE:
-                return deleteFile(path);
+                return deleteFile(ftpClient, path);
             case NOT_EXIT:
             default:
                 throw new Exception("Del defeat! There are also files under the directory.");
@@ -175,7 +149,7 @@ public class FTPUtil {
      * 在FTP服务器上删除目录
      * 如果目录下有文件或者文件夹，则删除失败
      */
-    public boolean removeDir(String path) throws Exception {
+    public static boolean removeDir(FTPClient ftpClient, String path) throws Exception {
         path = normFileName(path);
         FTPFile[] ftpFileArr = ftpClient.listFiles(path);
         if (ftpFileArr == null || ftpFileArr.length == 0) {
@@ -185,11 +159,10 @@ public class FTPUtil {
         }
     }
 
-
     /**
      * 删除FTP服务器上的文件
      */
-    public boolean deleteFile(String fileName) throws Exception {
+    public static boolean deleteFile(FTPClient ftpClient, String fileName) throws Exception {
 
         if (ftpClient.deleteFile(fileName)) return true;
         else throw new Exception("del file defeat!");
@@ -198,7 +171,7 @@ public class FTPUtil {
     /**
      * 删除目录
      */
-    public boolean deleteDir(String dir) throws Exception {
+    public static boolean deleteDir(FTPClient ftpClient, String dir) throws Exception {
         dir = normFileName(dir);
         FTPFile[] ftpFileArr = ftpClient.listFiles(dir);
         if (ftpFileArr == null || ftpFileArr.length == 0) {
@@ -207,19 +180,18 @@ public class FTPUtil {
         for (FTPFile ftpFile : ftpFileArr) {
             String name = dir + "/" + ftpFile.getName();
             if (ftpFile.isDirectory()) {
-                deleteDir(name);
+                deleteDir(ftpClient, name);
             } else if (ftpFile.isFile()) {
-                deleteFile(name);
+                deleteFile(ftpClient, name);
             }
         }
-        return removeDir(dir);
+        return removeDir(ftpClient, dir);
     }
-
 
     /**
      * 判断文件是否存在
      */
-    private boolean exitFile(String fileName) throws Exception {
+    public static boolean exitFile(FTPClient ftpClient, String fileName) throws Exception {
         InputStream in = ftpClient.retrieveFileStream(fileName);
         if (in == null || ftpClient.getReplyCode() == FTPReply.UNRECOGNIZED_COMMAND)
             return false;
@@ -232,10 +204,10 @@ public class FTPUtil {
     /**
      * 判断目录是否存在
      */
-    private boolean exitDir(String path) throws Exception {
-        boolean flag = changeDirectory(path);
+    public static boolean exitDir(FTPClient ftpClient, String path) throws Exception {
+        boolean flag = changeDirectory(ftpClient, path);
         if (flag) {
-            changeDirectory("..");
+            changeDirectory(ftpClient, "..");
             return true;
         }
         return false;
@@ -247,15 +219,14 @@ public class FTPUtil {
      * TYPE_FILE 666 ：文件
      * NOT_EXIT      ：路径不存在
      */
-    public int checkDir(String path) throws Exception {
+    public static int checkDir(FTPClient ftpClient, String path) throws Exception {
         path = normFileName(path);
-        boolean isDir = exitDir(path);
+        boolean isDir = exitDir(ftpClient, path);
         if (isDir) return TYPE_DIR;
-        boolean isFile = exitFile(path);
+        boolean isFile = exitFile(ftpClient, path);
         if (isFile) return TYPE_FILE;
         else return NOT_EXIT;
     }
-
 
     /**
      * 得到文件列表,listFiles返回包含目录和文件，它返回的是一个FTPFile数组
@@ -268,14 +239,16 @@ public class FTPUtil {
      * @param path   FTP服务器上的文件目录
      * @param isShow 是否显示空目录
      */
-    List<String> getFileList(String path, boolean isShow) throws Exception {
+    public static List<String> getFileList(FTPClient ftpClient, String path, boolean isShow)
+            throws Exception {
         List<String> retList = new ArrayList<>();
         path = normFileName(path);
-        getFiles(path, retList, isShow);
+        getFiles(ftpClient, path, retList, isShow);
         return retList;
     }
 
-    private void getFiles(String path, List<String> retList, boolean isShow) throws Exception {
+    private static void getFiles(FTPClient ftpClient, String path, List<String> retList, boolean isShow)
+            throws Exception {
         FTPFile[] ftpFiles = ftpClient.listFiles(path);
         if (ftpFiles == null || ftpFiles.length == 0) {
             if (isShow) retList.add(path);
@@ -283,25 +256,39 @@ public class FTPUtil {
         }
         for (FTPFile ftpFile : ftpFiles) {
             if (ftpFile.isDirectory()) {
-                getFiles(path + "/" + ftpFile.getName(), retList, isShow);
+                getFiles(ftpClient, path + "/" + ftpFile.getName(), retList, isShow);
             } else if (ftpFile.isFile()) {
                 retList.add(path + "/" + ftpFile.getName());
             }
         }
     }
 
+    /**
+     * 上传自定义字符串
+     *
+     * @param FTPFilePath FTP服务器文件路径
+     * @param FTPFileName FTP服务器文件名称
+     * @param content     内容
+     */
+    public static boolean uploadContent(FTPClient ftpClient, String FTPFilePath, String FTPFileName, String content)
+            throws Exception {
+        InputStream in = new ByteArrayInputStream(content.getBytes("UTF-8"));
+        return uploadFile(ftpClient, FTPFilePath, FTPFileName, in);
+    }
 
     /**
      * 上传文件到FTP服务器
      * 在进行上传和下载文件的时候，设置文件的类型最好是：
      * FTPUtil.setFileType(FTPUtil.BINARY_FILE_TYPE)
      *
+     * @param FTPFilePath   FTP服务器文件路径
      * @param FTPFileName   FTP服务器文件名称
      * @param localFilePath 本地文件路径和名称
      */
-    public boolean uploadFile(String FTPFilePath, String FTPFileName, String localFilePath) throws Exception {
+    public static boolean uploadFile(FTPClient ftpClient, String FTPFilePath, String FTPFileName, String localFilePath)
+            throws Exception {
         InputStream iStream = new FileInputStream(localFilePath);
-        return uploadFile(FTPFilePath, FTPFileName, iStream);
+        return uploadFile(ftpClient, FTPFilePath, FTPFileName, iStream);
     }
 
     /**
@@ -315,10 +302,10 @@ public class FTPUtil {
      * @param FTPFileName FTP服务器文件名称
      * @param in          本地文件输入流
      */
-    public boolean uploadFile(String FTPFilePath, String FTPFileName, InputStream in) throws Exception {
+    public static boolean uploadFile(FTPClient ftpClient, String FTPFilePath, String FTPFileName, InputStream in) throws Exception {
         boolean flag;
         if (in != null) {
-            if (!changeDirectory(FTPFilePath)) createDirectory(FTPFilePath);
+            if (!changeDirectory(ftpClient, FTPFilePath)) createDirectory(ftpClient, FTPFilePath);
             flag = ftpClient.storeFile(normFileName(FTPFilePath + "/" + FTPFileName), in);
         } else {
             throw new Exception("InputStream is null");
@@ -327,15 +314,14 @@ public class FTPUtil {
         return flag;
     }
 
-
     /**
      * 获取FTP服务器上的文件流
      *
      * @param FTPFileName FTP服务器资源文件名称
      */
-    public InputStream getFTPFileStream(String FTPFileName) throws Exception {
+    public static InputStream getFTPFileStream(FTPClient ftpClient, String FTPFileName) throws Exception {
         FTPFileName = normFileName(FTPFileName);
-        if (!exitFile(FTPFileName)) throw new Exception("File " + FTPFileName + " does not exit.");
+        if (!exitFile(ftpClient, FTPFileName)) throw new Exception("File " + FTPFileName + " does not exit.");
         return ftpClient.retrieveFileStream(FTPFileName);
     }
 
@@ -345,10 +331,10 @@ public class FTPUtil {
      * @param FTPFileName   FTP服务器资源文件名称
      * @param localFileName 本地目录
      */
-    public boolean downloadFTPFile2local(String FTPFileName, String localFileName) throws Exception {
+    public static boolean downloadFTPFile2local(FTPClient ftpClient, String FTPFileName, String localFileName) throws Exception {
         FileOutputStream out = null;
         FTPFileName = normFileName(FTPFileName);
-        if (!exitFile(FTPFileName)) throw new Exception(FTPFileName + " does not exit.");
+        if (!exitFile(ftpClient, FTPFileName)) throw new Exception(FTPFileName + " does not exit.");
         boolean flag;
         try {
             out = new FileOutputStream(localFileName);
@@ -359,35 +345,23 @@ public class FTPUtil {
         return flag;
     }
 
-    public String getFileContent(String path) throws Exception {
-        InputStream in = getFTPFileStream(path);
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        int i;
-//        while ((i = in.read()) != -1) {
-//            baos.write(i);
-//        }
-//        String content = baos.toString();
-//        baos.close();
-//        in.close();
-//        return content;
-
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        try {
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-        } finally {
-            in.close();
-        }
-        return new String(sb.toString().getBytes("GB2312"), "utf-8");
+    /**
+     * 获取文件内容
+     * 不支持office
+     */
+    public static String getFileContent(FTPClient ftpClient, String path) throws Exception {
+        InputStream in = getFTPFileStream(ftpClient, path);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int i;
+        while ((i = in.read()) != -1) baos.write(i);
+        String content = baos.toString();
+        baos.close();
+        in.close();
+        return content;
     }
 
-
     //规范文件名
-    private String normFileName(String file) throws Exception {
+    private static String normFileName(String file) throws Exception {
         if (file.equals("") || file.equals("/")) return "";
         file = file.replace('\\', '/');
         if (!file.startsWith("/")) file = "/" + file;
@@ -396,25 +370,8 @@ public class FTPUtil {
 
     //设置编码格式 ，使FTP能够正确识别中文
     //GBK -> ISO-8859-1
-    private String setEncodedGBK2ISO_8859_1(String str) throws Exception {
+    private static String setEncodedGBK2ISO_8859_1(String str) throws Exception {
         return new String(str.getBytes("GBK"), FTP.DEFAULT_CONTROL_ENCODING);
-    }
-
-    //识别FTP上的中文
-    //ISO-8859-1 -> GBK
-    private String setEncodedISO_8859_1ToGBK(String str) throws Exception {
-        return new String(str.getBytes(FTP.DEFAULT_CONTROL_ENCODING), "GBK");
-    }
-
-    private String setEncoded(String str, String encoded) throws Exception {
-        return new String(str.getBytes(FTP.DEFAULT_CONTROL_ENCODING), encoded);
-    }
-
-    public static void main(String[] args) throws Exception {
-        List<String> list = getInstance().getFileList("/", false);
-        for (String str : list)
-            System.out.println(str);
-//        System.out.println(getInstance().getFileContent("HBaseClient接口文档.docx"));
     }
 
 }

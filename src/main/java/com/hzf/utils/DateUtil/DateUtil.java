@@ -9,7 +9,7 @@ public class DateUtil {
     /**
      * 时区 年-月-日 时:分:秒 显示格式
      */
-    private static String DATE_TO_STRING_DETAILS_PATTERN = "Z yyyy-MM-dd HH:MM:ss";
+    public static String DATE_TO_STRING_DETAILS_PATTERN = "Z yyyy-MM-dd HH:MM:ss";
 
 
     /**
@@ -31,7 +31,7 @@ public class DateUtil {
      * @param s  秒
      * @return 日期
      */
-    static Date getDate(int y, int m, int d, int h, int mi, int s) {
+    public static Date getDate(int y, int m, int d, int h, int mi, int s) {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, y);
         cal.set(Calendar.MONTH, mi - 1);

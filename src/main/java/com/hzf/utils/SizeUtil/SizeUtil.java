@@ -10,7 +10,6 @@ import java.text.DecimalFormat;
  */
 public class SizeUtil {
 
-
     //按encode编码来编码
     public static String getStrSize(String content, String encode) throws Exception {
         return getResult(content.getBytes(encode).length);
@@ -37,7 +36,6 @@ public class SizeUtil {
         FileChannel fc = in.getChannel();
         return getResult(fc.size());
     }
-
 
     private static String getResult(long size) {
         DecimalFormat df = new DecimalFormat("#0.00");
