@@ -1,7 +1,9 @@
 package com.hzf.utils.FTPUtil;
 
-import com.hzf.utils.ConfigUtil.ConfigUtil;
-import org.apache.commons.net.ftp.*;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -21,37 +23,26 @@ public class FTPUtil {
      * 路径不存在
      */
     public static final int NOT_EXIT = 9487;
-    /**
-     * FTP.BINARY_FILE_TYPE 二进制文件
-     */
-    public static final int BINARY = FTP.BINARY_FILE_TYPE;
-    /**
-     * FTP.ASCII_FILE_TYPE 文本文件
-     */
-    public static final int ASCII = FTP.ASCII_FILE_TYPE;
 
+    public static final int BINARY = FTP.BINARY_FILE_TYPE;
+    public static final int ASCII = FTP.ASCII_FILE_TYPE;
+    public static final int EBCDIC = FTP.EBCDIC_FILE_TYPE;
+    public static final int LOCAL = FTP.LOCAL_FILE_TYPE;
 
     /**
      * 连接ftp
-     *
-     * @param server   服务器地址名称
-     * @param port     端口号
-     * @param user     用户名
-     * @param password 用户密码
-     * @param fileType 文件类型
-     * @return FTPClient
      */
-    public static FTPClient getFtpClient(String server, int port, String user, String password, int fileType)
+    public static FTPClient getFtpClient(FTPConfig config)
             throws Exception {
         FTPClient ftpClient = new FTPClient();
-        ftpClient.connect(server, port);
+        ftpClient.connect(config.getHost(), config.getPort());
         //连接成功后的回应码
         int reply = ftpClient.getReplyCode();
         if (FTPReply.isPositiveCompletion(reply)) {
-            if (ftpClient.login(user, password)) {
-                ftpClient.setBufferSize(1024);//设置上传缓存大小
-                ftpClient.setControlEncoding("GBK");//设置编码
-                ftpClient.setFileType(fileType);
+            if (ftpClient.login(config.getName(), config.getPassword())) {
+                ftpClient.setBufferSize(config.getBufferSize());//设置上传缓存大小
+                ftpClient.setControlEncoding(config.getEncoding());//设置编码
+                ftpClient.setFileType(config.getFileType());
             } else {
                 ftpClient.disconnect();
                 throw new Exception("FTP server refused login.");
@@ -64,11 +55,11 @@ public class FTPUtil {
     }
 
     /**
-     * 连接ftp
+     * 重新连接
      */
-    public static FTPClient getFtpClient(String server, int port, String user, String password)
-            throws Exception {
-        return getFtpClient(server, port, user, password, BINARY);
+    public static FTPClient reconnectFTP(FTPClient ftpClient, FTPConfig config) throws Exception {
+        disconnectFTP(ftpClient);
+        return getFtpClient(config);
     }
 
     /**

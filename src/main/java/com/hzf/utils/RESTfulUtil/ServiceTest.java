@@ -32,18 +32,19 @@ public class ServiceTest implements Runnable {
     public void run() {
         System.out.println("~~~~~~~~~0 Run Thread~~~~~~~~~");
         // 添加 ResourceClass
-        List<Class<?>> resourceClassList = new ArrayList<Class<?>>();
+        List<Class<?>> resourceClassList = new ArrayList<>();
         resourceClassList.add(ProductServiceImpl.class);
 
         // 添加 ResourceProvider
-        List<ResourceProvider> resourceProviderList = new ArrayList<ResourceProvider>();
+        List<ResourceProvider> resourceProviderList = new ArrayList<>();
         resourceProviderList.add(new SingletonResourceProvider(new ProductServiceImpl()));
 
         // 添加 Provider
-        List<Object> providerList = new ArrayList<Object>();
+        List<Object> providerList = new ArrayList<>();
         providerList.add(new JacksonJsonProvider());
 
         System.out.println("~~~~~~~~~1 Run Thread~~~~~~~~~");
+
         // 发布 REST 服务
         JAXRSServerFactoryBean factory = new JAXRSServerFactoryBean();
         factory.setAddress("http://192.168.65.107:8080");
