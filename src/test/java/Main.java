@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         FTPClient ftpClient = getFtpClient();
-//        boolean result = FTPUtil.uploadContent(ftpClient, "uploadContent", "test2", "test content 哈哈哈哈");
+//        boolean result = FTPUtil.uploadContent(ftpClient, "uploadContent", "test2", "test content");
 //        System.out.println(result);
         String content = FTPUtil.getFileContent(ftpClient, "uploadContent/test2");
         System.out.println(content);
