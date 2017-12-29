@@ -4,9 +4,16 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.hadoop.mapreduce.lib.join.TestWrappedRRClassloader;
+import org.apache.poi.POIXMLDocument;
+import org.apache.poi.POIXMLTextExtractor;
+import org.apache.poi.hwpf.extractor.WordExtractor;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -324,8 +331,8 @@ public class FTPUtil {
      */
     public static boolean downloadFTPFile2local(FTPClient ftpClient, String FTPFileName, String localFileName) throws Exception {
         FileOutputStream out = null;
-        FTPFileName = normFileName(FTPFileName);
-        if (!exitFile(ftpClient, FTPFileName)) throw new Exception(FTPFileName + " does not exit.");
+        if (!exitFile(ftpClient, normFileName(FTPFileName)))
+            throw new Exception("File " + FTPFileName + " does not exit.");
         boolean flag;
         try {
             out = new FileOutputStream(localFileName);
@@ -338,17 +345,45 @@ public class FTPUtil {
 
     /**
      * 获取文件内容
-     * 不支持office
+     * <p>
+     * docx 其实是zip 需要用poi读取
      */
     public static String getFileContent(FTPClient ftpClient, String path) throws Exception {
-        InputStream in = getFTPFileStream(ftpClient, path);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int i;
-        while ((i = in.read()) != -1) baos.write(i);
-        String content = baos.toString();
-        baos.close();
-        in.close();
-        return content;
+        InputStream in = null;
+        OPCPackage opcPackage = null;
+        POIXMLTextExtractor extractor = null;
+        WordExtractor ex = null;
+        InputStreamReader read = null;
+        BufferedReader reader = null;
+        StringBuilder s = new StringBuilder();
+        try {
+            in = getFTPFileStream(ftpClient, path);
+            if (path.endsWith(".doc") || path.endsWith(".DOC")) {
+                ex = new WordExtractor(in);
+                s.append(ex.getText());
+            } else if (path.endsWith("docx") || path.endsWith(".DOCX")) {
+                opcPackage = OPCPackage.open(in);
+                extractor = new XWPFWordExtractor(opcPackage);
+                s.append(extractor.getText());
+            } else if (path.endsWith(".pdf") || path.endsWith(".PDF")) {
+
+            } else {
+                String line;
+                read = new InputStreamReader(in, "GBK");
+                reader = new BufferedReader(read);
+                while ((line = reader.readLine()) != null) {
+                    s.append(line).append("\n");
+                }
+            }
+        } finally {
+            if (ex != null) ex.close();
+            if (extractor != null) extractor.close();
+            if (opcPackage != null) opcPackage.close();
+            if (reader != null) reader.close();
+            if (read != null) read.close();
+            if (in != null) in.close();
+        }
+        return s.toString();
     }
 
     //规范文件名
