@@ -135,9 +135,4 @@ public class FileUtil {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println(printFileContent("D:\\files\\Hadoop安装Html\\Hadoop安装.docx"));
-    }
-
-
 }

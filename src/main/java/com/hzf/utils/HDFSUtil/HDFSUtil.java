@@ -17,7 +17,6 @@ public class HDFSUtil {
     private HDFSUtil() {
     }
 
-
     /**
      * 配置FileSystem
      */
@@ -51,7 +50,7 @@ public class HDFSUtil {
     /**
      * 删除所有文件
      */
-    public static boolean delete(FileSystem fs) throws Exception {
+    public static boolean deleteAll(FileSystem fs) throws Exception {
         Path workDir = fs.getWorkingDirectory();
         return fs.delete(workDir, true);
     }
@@ -65,20 +64,12 @@ public class HDFSUtil {
         } else {
             System.out.println("the file isn't exists");
         }
-
     }
 
 
-    public static InputStream getHDFSFileStream(FileSystem fs, String ssid, String file) throws Exception {
-        FSDataInputStream FSin = null;
-        try {
-            file = normFileName(file);
-            Path path = new Path(getWorkDir(fs) + "/" + ssid + file);
-            FSin = fs.open(path);// 获取文件流
-            return FSin;
-        } finally {
-            if (FSin != null) FSin.close();
-        }
+    public static InputStream getHDFSFileStream(FileSystem fs, String file) throws Exception {
+        Path path = new Path(getWorkDir(fs) + "/" + normFileName(file));
+        return fs.open(path);// 获取文件流
     }
 
     /**
@@ -170,10 +161,9 @@ public class HDFSUtil {
         return bos;
     }
 
-    public static void main(String[] args) throws Exception {
-
-        FileSystem fs = HDFSUtil.getFileSystem();
-
+    //将斜杠出错的文件名迁移
+    private void move() throws Exception {
+        FileSystem fs = getFileSystem();
         List<String> fileNames = new ArrayList<>();
         Path path = new Path(getWorkDir(fs) + "/" + "PDF");
         FileStatus[] fList = fs.listStatus(path);
@@ -185,8 +175,7 @@ public class HDFSUtil {
                 temp = temp.replace("/", "\\");
                 actual = path.toString() + "/" + temp;
             }
-            if (actual.contains("\\"))
-                fileNames.add(actual);
+            if (actual.contains("\\")) fileNames.add(actual);
         }
         for (String file : fileNames) {
             Path oldPath = new Path(file);
@@ -194,9 +183,11 @@ public class HDFSUtil {
             InputStream in = fs.open(oldPath);
             HDFSUtil.uploadFile2hdfs(fs, in, newPath.toString().replace(getWorkDir(fs).toString() + "/", ""));
         }
-
-
     }
 
+    public static void main(String[] args) throws Exception {
+        FileSystem fs = getFileSystem();
+
+    }
 
 }

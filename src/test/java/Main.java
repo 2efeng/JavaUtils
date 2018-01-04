@@ -18,7 +18,14 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        String str = "D:\\files\\Hadoop安装.docx";
+        try {
+            String fileName = "D:\\files\\HDFSDesign.docx";
+            String htmlPah = "D:\\files\\HDFSDesignHtml\\";
+            String htmlName = "HDFSDesign.html";
+            System.out.println(Word2html.word2html(fileName, htmlPah, htmlName));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 

@@ -13,11 +13,11 @@
         <httpclient.version>4.5.4</httpclient.version>
         <hbase.version>1.2.6</hbase.version>
         <hadoop.version>2.8.0</hadoop.version>
-        <doc2html.version>1.0.6</doc2html.version>
         <docx2html.version>3.12</docx2html.version>
         <cxf.version>3.2.0</cxf.version>
         <pdf.version>2.0.8</pdf.version>
     </properties>
+
     <dependencies>
         <!--log-->
         <dependency>
@@ -80,7 +80,6 @@
             <artifactId>hadoop-minicluster</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-
         <!--pdf-->
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -101,9 +100,9 @@
         <dependency>
             <groupId>fr.opensagres.xdocreport</groupId>
             <artifactId>org.apache.poi.xwpf.converter.xhtml</artifactId>
-            <version>${doc2html.version}</version>
+            <version>1.0.6</version>
         </dependency>
-        
+
     </dependencies>
 
 </project>

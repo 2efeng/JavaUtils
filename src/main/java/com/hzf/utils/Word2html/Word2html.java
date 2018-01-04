@@ -19,17 +19,35 @@ import java.io.*;
 
 public class Word2html {
 
-    private static final String DOC_TYPE = ".doc";
-    private static final String DOCX_TYPE = ".docx";
+    /**
+     * @param fileName word文件的路径/文件名
+     * @param htmlPath html路径
+     * @param htmlName html文件名
+     */
+    public static boolean word2html(String fileName, String htmlPath, String htmlName) throws Exception {
+        File file = new File(fileName);
+        if (!file.exists()) throw new Exception("File " + fileName + " does not Exists!");
+        if (fileName.endsWith(".doc") || fileName.endsWith(".DOC")) {
+            doc2html(file, htmlPath, htmlName);
+        } else if (fileName.endsWith(".docx") || fileName.endsWith(".docx")) {
+            docx2html(file, htmlPath, htmlName);
+        } else {
+            throw new Exception("err! the file is not word.");
+        }
+        return true;
+    }
 
-    private static void docx2html(String fileName, String htmlPath, String htmlName) throws Exception {
-        File f = new File(fileName);
-        checkFile(f, DOCX_TYPE);
+    /**
+     * docx文件转成html
+     */
+    private static void docx2html(File file, String htmlPath, String htmlName) throws Exception {
         //加载word文档生成 XWPFDocument对象
-        InputStream in = new FileInputStream(f);
+        InputStream in = new FileInputStream(file);
         XWPFDocument document = new XWPFDocument(in);
         //解析 XHTML配置 (这里设置IURIResolver来设置图片存放的目录)
         File imageFolderFile = new File(htmlPath);
+        if (!imageFolderFile.exists()) if (!imageFolderFile.mkdir())
+            throw new Exception(htmlPath + "  create err!");
         FileURIResolver fileURIResolver = new FileURIResolver(imageFolderFile);
         XHTMLOptions options = XHTMLOptions.create().URIResolver(fileURIResolver);
         FileImageExtractor fileImageExtractor = new FileImageExtractor(imageFolderFile);
@@ -37,26 +55,27 @@ public class Word2html {
         options.setIgnoreStylesIfUnused(false);
         options.setFragment(true);
         //将 XWPFDocument转换成XHTML
-        OutputStream out = new FileOutputStream(new File(htmlPath + htmlName));
+        OutputStream out = new FileOutputStream(htmlPath + htmlName);
         XHTMLConverter.getInstance().convert(document, out, options);
     }
 
-    public static void doc2html(String fileName, String htmlPath, String htmlName) throws Exception {
-        File f = new File(fileName);
-        checkFile(f, DOC_TYPE);
+    /**
+     * doc文件转成html
+     */
+    private static void doc2html(File file, String htmlPath, String htmlName) throws Exception {
         String imagePath = htmlPath + "image\\";
-        InputStream input = new FileInputStream(f);
+        InputStream input = new FileInputStream(file);
         HWPFDocument wordDocument = new HWPFDocument(input);
         Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         WordToHtmlConverter wordToHtmlConverter = new WordToHtmlConverter(document);
         //设置图片存放的位置
         wordToHtmlConverter.setPicturesManager((content, pictureType, suggestedName, widthInches, heightInches) -> {
             try {
-                return setPic(imagePath, suggestedName, content);
+                setPic(imagePath, suggestedName, content);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
+            return imagePath + suggestedName;
         });
         //解析word文档
         wordToHtmlConverter.processDocument(wordDocument);
@@ -74,33 +93,15 @@ public class Word2html {
         outStream.close();
     }
 
-    private static String setPic(String imagePath, String suggestedName, byte[] content) throws Exception {
+    private static void setPic(String imagePath, String suggestedName, byte[] content) throws Exception {
         File imgPath = new File(imagePath);
         if (!imgPath.exists())
             if (!imgPath.mkdirs())
-                throw new Exception("image create err!");
-        File file1 = new File(imagePath + suggestedName);
-        OutputStream os = new FileOutputStream(file1);
+                throw new Exception(imagePath + "  create err!");
+        File file = new File(imagePath + suggestedName);
+        OutputStream os = new FileOutputStream(file);
         os.write(content);
         os.close();
-        return imagePath + suggestedName;
     }
 
-    private static void checkFile(File file, String type) throws Exception {
-        if (!file.exists())
-            throw new Exception("File does not Exists!");
-        if (!(file.getName().endsWith(type)) && !(file.getName().endsWith(type.toUpperCase())))
-            throw new Exception("File is not " + type);
-    }
-
-    public static void main(String[] args) {
-        try {
-            String fileName = "D:\\files\\Hadoop安装Html\\Hadoop安装.docx";
-            String htmlPah = "D:\\files\\Hadoop安装Html\\";
-            String htmlName = "Hadoop安装.html";
-            docx2html(fileName, htmlPah, htmlName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
