@@ -2,6 +2,7 @@ import com.hzf.utils.ConfigUtil.ConfigUtil;
 import com.hzf.utils.FTPUtil.FTPConfig;
 import com.hzf.utils.FTPUtil.FTPUtil;
 import com.hzf.utils.FileUtil.FileUtil;
+import com.hzf.utils.Word2html.Word2html;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.poi.POIXMLDocument;
 import org.apache.poi.POIXMLTextExtractor;
@@ -17,16 +18,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        FTPClient ftpClient = getFtpClient();
-//        boolean result = FTPUtil.uploadFile(ftpClient, "uploadContent", "test4.docx", "C:\\Users\\zf.huang\\Desktop\\HBaseClient接口文档.docx");
-//        System.out.println(result);
-//        String content = FTPUtil.getFileContent(ftpClient, "idea/LicenseServer.txt");
-        String content = FileUtil.printFileContent("C:\\Users\\zf.huang\\Desktop\\kotlin.pdf");
-        System.out.println(content);
-//        String content = FTPUtil.getFileContent(ftpClient, "uploadFile/HBaseClient接口文档.docx");
-//        System.out.println(content);
-//        boolean result = FTPUtil.downloadFTPFile2local(ftpClient, "uploadFile/HBaseClient接口文档.docx", "C:/Users/zf.huang/Desktop/HBaseClient接口文档3.docx");
-//        System.out.println(result);
+        String str = "D:\\files\\Hadoop安装.docx";
+
     }
 
     public static String readWord(String path) {

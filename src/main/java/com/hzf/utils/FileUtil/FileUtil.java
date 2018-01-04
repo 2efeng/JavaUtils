@@ -121,9 +121,6 @@ public class FileUtil {
         return s.toString();
     }
 
-    /**
-     *
-     */
     private static String getPdfContent(FileInputStream in) throws Exception {
         PDDocument document = null;
         try {
@@ -136,6 +133,10 @@ public class FileUtil {
             if (document != null) document.close();
             if (in != null) in.close();
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println(printFileContent("D:\\files\\Hadoop安装Html\\Hadoop安装.docx"));
     }
 
 

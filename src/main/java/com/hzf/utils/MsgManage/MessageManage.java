@@ -20,15 +20,10 @@ public class MessageManage {
         return msg.size();
     }
 
-    public static Object getMessage() {
+    public static Object getMessage() throws Exception {
         synchronized (msg) {
-            while (msg.isEmpty()) {
-                try {
-                    msg.wait(100);
-                } catch (InterruptedException ie) {
-                    //TODO ie to logMsg.log
-                    ie.printStackTrace();
-                }
+            while (msg.isEmpty() || getMessageCount() == 0) {
+                msg.wait(100);
                 return null;
             }
             return msg.removeFirst();
