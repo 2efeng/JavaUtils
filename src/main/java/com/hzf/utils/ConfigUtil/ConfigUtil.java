@@ -15,8 +15,7 @@ public class ConfigUtil {
 
     static {
         loadConfigByResource();
-        loadConfigByPath();
-        loadLog4jByPath();
+
     }
 
     //加载config

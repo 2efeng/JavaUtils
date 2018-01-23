@@ -25,6 +25,7 @@ public class Base64Util {
     }
 
     public static boolean decodeBase64ToFile(String base64, FileOutputStream out) throws Exception {
+        if (out == null) throw new Exception("file is null!");
         byte[] contentByte = decodeBase64ToByte(base64);
         try {
             out.write(contentByte);

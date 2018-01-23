@@ -20,7 +20,7 @@ public class HDFSUtil {
     /**
      * 配置FileSystem
      */
-    private static FileSystem getFileSystem() throws Exception {
+    public static FileSystem getFileSystem() throws Exception {
         String ip = ConfigUtil.getProperty("hadoopIP");
         String port = ConfigUtil.getProperty("hadoopPort");
         String hadoopUserName = ConfigUtil.getProperty("hadoopUserName");
@@ -78,7 +78,8 @@ public class HDFSUtil {
      * @param filePath 路径/文件名
      * @param local    本地路径
      */
-    public static void downloadFile2local(FileSystem fs, String ssid, String filePath, String local) throws Exception {
+    public static void downloadFile2local(FileSystem fs, String ssid, String filePath, String local)
+            throws Exception {
         FSDataInputStream FSin = null;
         FileOutputStream out = null;
         try {
@@ -186,8 +187,10 @@ public class HDFSUtil {
     }
 
     public static void main(String[] args) throws Exception {
-        FileSystem fs = getFileSystem();
 
+        FileSystem fs = getFileSystem();
+        HDFSUtil.uploadFile2hdfs(fs, "C:\\Users\\zf.huang\\Desktop\\HBaseClient.zip", "ZIP/Test.zip");
     }
+
 
 }
