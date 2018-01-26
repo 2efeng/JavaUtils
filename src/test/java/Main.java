@@ -23,36 +23,26 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-//        String pattern = "yyyy-MM-dd HH:mm:ss SSS";
-//        Date date = DateUtil.getDate(2018, 1, 10, 12, 0, 0, 0);
-//        System.out.println(date.getMonth());
 
-//        Date date = calendar.getTime();
-//        System.out.println(format.format(date));
+        FTPClient client = getFtpClient();
+    }
 
 
-        long start = System.nanoTime();
-        Date startDate = new Date();
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long period = System.nanoTime() - start;
-        System.out.println(String.format("period(nanoseconds): %d, period(seconds): %d", period, TimeUnit.NANOSECONDS.toSeconds(period)));
-        long num = TimeUnit.NANOSECONDS.toMillis(period);
-        long end = System.currentTimeMillis();
-        Date endDate = new Date(end - num);
-        System.out.println(startDate);
-        System.out.println(endDate);
+    private static void test16num() {
+        int a = 0xABCD;
+        System.out.println(a);
+        System.out.format("%x ", a);
+    }
 
-
-//        Date date = new Date();
-//        long nano = System.nanoTime();
-//        Date dateNano = new Date(nano);
-//        System.out.println(date);
-//        System.out.println(dateNano);
-//        NanoSec();
+    private static void test(boolean a, boolean b, boolean c) {
+        //异或
+        //同 => false 0
+        //异 => true 1
+        System.out.print("a:" + String.valueOf(a) + "\tb:" + String.valueOf(b) + "\tc:" + String.valueOf(c));
+        System.out.print("\t\t");
+        System.out.print("(a^b) => " + (a ^ b));
+        System.out.print("\t,\t");
+        System.out.println("(a^b ? c:a) => " + (a ^ b ? c : a));
     }
 
     public static void NanoSec() throws Exception {
@@ -99,7 +89,6 @@ public class Main {
     }
 
     private static FTPClient getFtpClient() throws Exception {
-
         String host = ConfigUtil.getProperty("FtpServer");
         int port = Integer.valueOf(ConfigUtil.getProperty("FtpPort"));
         String name = ConfigUtil.getProperty("FtpName");
@@ -114,11 +103,4 @@ public class Main {
         return FTPUtil.getFtpClient(config);
     }
 
-    private static void test(int... a) {
-        System.out.println(a instanceof int[]);
-//        for (int b : a) {
-//            System.out.print(b + " ");
-//        }
-//        System.out.println();
-    }
 }
