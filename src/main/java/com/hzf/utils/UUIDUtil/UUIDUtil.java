@@ -5,10 +5,9 @@ import java.util.*;
 public class UUIDUtil {
 
     public static void main(String[] args) {
-        for (int i = 0; i < 100; i++) {
-            String uuid = generateShortUuid();
-            System.out.println(uuid);
-        }
+        System.out.println(UUID.randomUUID().toString());
+        System.out.println(UUID.randomUUID().toString());
+        System.out.println(UUID.randomUUID().toString());
 
     }
 
@@ -34,4 +33,6 @@ public class UUIDUtil {
         return shortBuffer.toString();
 
     }
+
+
 }
