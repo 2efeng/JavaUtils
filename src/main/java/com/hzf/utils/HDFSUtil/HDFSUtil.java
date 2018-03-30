@@ -14,8 +14,7 @@ import java.util.List;
 
 public class HDFSUtil {
 
-    private HDFSUtil() {
-    }
+    private HDFSUtil() {}
 
     /**
      * 配置FileSystem
@@ -31,7 +30,7 @@ public class HDFSUtil {
         return FileSystem.get(config);
     }
 
-    public static Path getWorkDir(FileSystem fs) {
+    private static Path getWorkDir(FileSystem fs) {
         return fs.getWorkingDirectory();
     }
 

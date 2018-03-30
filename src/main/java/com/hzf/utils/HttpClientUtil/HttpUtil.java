@@ -2,8 +2,6 @@ package com.hzf.utils.HttpClientUtil;
 
 import com.hzf.utils.ExUtil.ThrowUtil;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
@@ -11,7 +9,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -20,11 +17,6 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
-
-import javax.net.ssl.SSLException;
-import java.io.InterruptedIOException;
-import java.net.URI;
-import java.net.UnknownHostException;
 
 public class HttpUtil {
 
@@ -171,20 +163,13 @@ public class HttpUtil {
 
 
     public static void main(String[] args) throws Exception {
-        URI uri = new URIBuilder()
-                .setScheme("http")
-                .setHost("192.168.128.162:8686")
-                .setPath("/dataws/geturl")
-                .addParameter("stype", "spider")
-                .build();
-//        for (int i = 0; i < 100; i++) {
-//            System.out.println(getInstance().doGet(uri.toString() + i));
-//
-//        }
 
-        Object[] objArr = {1, true, "123", null};
-        System.out.println(1.0 / 3.0);
-        System.out.println(1.0 - 2.0 / 3.0);
+        System.out.println(1.0 / 3.0 + 2.0 / 3.0);
+        System.out.println(2.0 / 3.0);
         System.out.println(1.0 / 3.0 == 1.0 - 2.0 / 3.0);
+
+//
+//        String url = "http://192.168.65.107:7000/save";
+//        getInstance().doPost(url,"[{\"CityId\":18,\"CityName\":\"西安\",\"ProvinceId\":27,\"CityOrder\":1},{\"CityId\":53,\"CityName\":\"广州\",\"ProvinceId\":27,\"CityOrder\":1}]");
     }
 }
