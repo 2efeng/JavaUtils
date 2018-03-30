@@ -1,9 +1,6 @@
 import com.hzf.utils.ConfigUtil.ConfigUtil;
-import com.hzf.utils.DateUtil.DateUtil;
 import com.hzf.utils.FTPUtil.FTPConfig;
 import com.hzf.utils.FTPUtil.FTPUtil;
-import com.hzf.utils.FileUtil.FileUtil;
-import com.hzf.utils.Word2html.Word2html;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.poi.POIXMLDocument;
 import org.apache.poi.POIXMLTextExtractor;
@@ -14,17 +11,18 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        FTPClient client = getFtpClient();
+        List<String> arrList = new ArrayList<>();
+
+        Object a = arrList;
+
     }
 
 
