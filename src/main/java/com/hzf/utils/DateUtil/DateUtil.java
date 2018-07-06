@@ -202,5 +202,29 @@ public class DateUtil {
         if (ms < 0 || ms > 999) throw new Exception("millisecond error!");
     }
 
+    public static void main(String[] args) throws InterruptedException {
+//        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.set(2017, Calendar.MARCH, 2);
+//        for (int i = 0; i < 10; i++) {
+//            calendar.add(Calendar.DAY_OF_MONTH, 1);
+//            System.out.println(simpleDateFormat.format(calendar.getTime()));
+//        }
+
+        Calendar start = Calendar.getInstance();
+        start.set(2017, Calendar.FEBRUARY, 2);
+        Calendar end = Calendar.getInstance();
+        end.set(2017, Calendar.DECEMBER, 3);
+        while (start.getTime().getTime() <= end.getTime().getTime()) {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String Date = simpleDateFormat.format(start.getTime());
+            for (int h = 8; h < 12; h++) {
+                System.out.println(Date);
+            }
+            start.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+    }
+
 
 }

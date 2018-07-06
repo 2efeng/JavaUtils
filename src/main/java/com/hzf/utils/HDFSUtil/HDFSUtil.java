@@ -14,8 +14,7 @@ import java.util.List;
 
 public class HDFSUtil {
 
-    private HDFSUtil() {
-    }
+    private HDFSUtil() {}
 
     /**
      * 配置FileSystem
@@ -31,7 +30,7 @@ public class HDFSUtil {
         return FileSystem.get(config);
     }
 
-    public static Path getWorkDir(FileSystem fs) {
+    private static Path getWorkDir(FileSystem fs) {
         return fs.getWorkingDirectory();
     }
 
@@ -186,10 +185,25 @@ public class HDFSUtil {
         }
     }
 
+
+    /**
+     * 上传文件到hdfs
+     *
+     * @param filePath String hdfs 路径/文件名
+     * @param in       InputStream 文件流
+     */
+    public static void uploadFile2hdfs2(FileSystem fs, InputStream in, String filePath) throws Exception {
+        filePath = normFileName(filePath);
+        Path path = new Path(fs.getWorkingDirectory() + filePath);
+        FSDataOutputStream FSos = fs.create(path);
+        IOUtils.copyBytes(in, FSos, 1024 * 4, true);
+    }
+
     public static void main(String[] args) throws Exception {
 
         FileSystem fs = getFileSystem();
-        HDFSUtil.uploadFile2hdfs(fs, "C:\\Users\\zf.huang\\Desktop\\HBaseClient.zip", "ZIP/Test.zip");
+        HDFSUtil.delete(fs,"spiderInstanceId/RaceOdds");
+
     }
 
 
