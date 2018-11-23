@@ -82,26 +82,26 @@ public class HttpUtil {
                 System.out.println(exception.toString());
             }
             return Boolean.parseBoolean(null);
-//            // 超时
-//            if (exception instanceof InterruptedIOException) {
-//                System.out.println("连接超时");
-//                return false;
-//            }
-//            // 目标服务器不可达
-//            if (exception instanceof UnknownHostException) {
-//                System.out.println("目标服务器不可达");
-//                return false;
-//            }
-//            // ssl握手异常
-//            if (exception instanceof SSLException) {
-//                System.out.println("ssl握手异常");
-//                return false;
-//            }
-//            HttpClientContext clientContext = HttpClientContext.adapt(context);
-//            HttpRequest request = clientContext.getRequest();
-//            // 如果请求是幂等的，就再次尝试
-//            //HttpClient默认把非实体方法get、head方法看做幂等方法，把实体方法post、put方法看做非幂等方法。
-//            return !(request instanceof HttpEntityEnclosingRequest);
+           // 超时
+           if (exception instanceof InterruptedIOException) {
+               System.out.println("连接超时");
+               return false;
+           }
+           // 目标服务器不可达
+           if (exception instanceof UnknownHostException) {
+               System.out.println("目标服务器不可达");
+               return false;
+           }
+           // ssl握手异常
+           if (exception instanceof SSLException) {
+               System.out.println("ssl握手异常");
+               return false;
+           }
+           HttpClientContext clientContext = HttpClientContext.adapt(context);
+           HttpRequest request = clientContext.getRequest();
+           // 如果请求是幂等的，就再次尝试
+           //HttpClient默认把非实体方法get、head方法看做幂等方法，把实体方法post、put方法看做非幂等方法。
+           return !(request instanceof HttpEntityEnclosingRequest);
         };
         context = HttpClientContext.create();
         httpClient = HttpClients.custom()
