@@ -160,16 +160,5 @@ public class HttpUtil {
         }
         return result;
     }
-
-
-    public static void main(String[] args) throws Exception {
-
-        System.out.println(1.0 / 3.0 + 2.0 / 3.0);
-        System.out.println(2.0 / 3.0);
-        System.out.println(1.0 / 3.0 == 1.0 - 2.0 / 3.0);
-
-//
-//        String url = "http://192.168.65.107:7000/save";
-//        getInstance().doPost(url,"[{\"CityId\":18,\"CityName\":\"西安\",\"ProvinceId\":27,\"CityOrder\":1},{\"CityId\":53,\"CityName\":\"广州\",\"ProvinceId\":27,\"CityOrder\":1}]");
-    }
+    
 }
