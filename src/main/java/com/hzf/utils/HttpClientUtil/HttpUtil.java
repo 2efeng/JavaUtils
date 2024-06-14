@@ -2,6 +2,8 @@ package com.hzf.utils.HttpClientUtil;
 
 import com.hzf.utils.ExUtil.ThrowUtil;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
@@ -17,6 +19,10 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+
+import javax.net.ssl.SSLException;
+import java.io.InterruptedIOException;
+import java.net.UnknownHostException;
 
 public class HttpUtil {
 
@@ -65,13 +71,8 @@ public class HttpUtil {
     private static void initHttpClient() throws Exception {
         reset();
         int timeout = 1000 * 30;
-        requestConfig = RequestConfig.custom()
-                .setConnectionRequestTimeout(timeout)
-                .setConnectTimeout(timeout)
-                .setSocketTimeout(timeout)
-                .build();
+        requestConfig = RequestConfig.custom().setConnectionRequestTimeout(timeout).setConnectTimeout(timeout).setSocketTimeout(timeout).build();
         connManager = new PoolingHttpClientConnectionManager();
-        //connManager = new BasicHttpClientConnectionManager();
         retryHandler = (exception, executionCount, context) -> {
             // 如果已经重试了5次，就放弃
             if (executionCount > 5) {
@@ -81,33 +82,29 @@ public class HttpUtil {
             } else {
                 System.out.println(exception.toString());
             }
-            return Boolean.parseBoolean(null);
-           // 超时
-           if (exception instanceof InterruptedIOException) {
-               System.out.println("连接超时");
-               return false;
-           }
-           // 目标服务器不可达
-           if (exception instanceof UnknownHostException) {
-               System.out.println("目标服务器不可达");
-               return false;
-           }
-           // ssl握手异常
-           if (exception instanceof SSLException) {
-               System.out.println("ssl握手异常");
-               return false;
-           }
-           HttpClientContext clientContext = HttpClientContext.adapt(context);
-           HttpRequest request = clientContext.getRequest();
-           // 如果请求是幂等的，就再次尝试
-           //HttpClient默认把非实体方法get、head方法看做幂等方法，把实体方法post、put方法看做非幂等方法。
-           return !(request instanceof HttpEntityEnclosingRequest);
+            // 超时
+            if (exception instanceof InterruptedIOException) {
+                System.out.println("连接超时");
+                return false;
+            }
+            // 目标服务器不可达
+            if (exception instanceof UnknownHostException) {
+                System.out.println("目标服务器不可达");
+                return false;
+            }
+            // ssl握手异常
+            if (exception instanceof SSLException) {
+                System.out.println("ssl握手异常");
+                return false;
+            }
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            HttpRequest request = clientContext.getRequest();
+            // 如果请求是幂等的，就再次尝试
+            //HttpClient默认把非实体方法get、head方法看做幂等方法，把实体方法post、put方法看做非幂等方法。
+            return !(request instanceof HttpEntityEnclosingRequest);
         };
         context = HttpClientContext.create();
-        httpClient = HttpClients.custom()
-                .setConnectionManager(connManager)
-                .setRetryHandler(retryHandler)
-                .build();
+        httpClient = HttpClients.custom().setConnectionManager(connManager).setRetryHandler(retryHandler).build();
     }
 
     public String doGet(String url) throws Exception {
@@ -122,8 +119,7 @@ public class HttpUtil {
             initHttpClient();
             throw e;
         } finally {
-            if (httpGet != null)
-                httpGet.abort();
+            if (httpGet != null) httpGet.abort();
         }
     }
 
@@ -144,8 +140,7 @@ public class HttpUtil {
             initHttpClient();
             throw e;
         } finally {
-            if (httpPost != null)
-                httpPost.abort();
+            if (httpPost != null) httpPost.abort();
         }
     }
 
@@ -160,5 +155,7 @@ public class HttpUtil {
         }
         return result;
     }
-    
+
+
+
 }
